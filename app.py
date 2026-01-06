@@ -34,7 +34,7 @@ CTOS_MAPPING = {
     "Maybank": [
         ("No Legal Suits at All", "Preference"),
         ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Not Applicable", "Not Applicable","Not Applicable"),
+        ("Trade Bureau", "Not Applicable"),
         ("Legal Status on Loan", "Strict 2"),
     ],
     "CIMB Bank": [
