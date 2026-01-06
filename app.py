@@ -1,19 +1,13 @@
 import streamlit as st
 import pandas as pd
 
-# -----------------------------
-# Page Config
-# -----------------------------
-st.set_page_config(
-    page_title="CTOS Parameters",
-    layout="wide"
-)
+st.set_page_config(page_title="CTOS Parameters by Bank", layout="wide")
 
 st.title("📊 CTOS Parameters (4)")
-st.caption("Foundation Table — Criteria & Result To Be Applied Later")
+st.caption("Bank-Specific Classification (from CTOS Policy)")
 
 # -----------------------------
-# Bank Selector (1 at a time)
+# Bank Selection
 # -----------------------------
 banks = [
     "RHB Bank",
@@ -24,72 +18,78 @@ banks = [
     "Bank Rakyat"
 ]
 
-selected_bank = st.selectbox(
-    "Select Bank",
-    banks
-)
-
+selected_bank = st.selectbox("Select Bank", banks)
 st.divider()
 
 # -----------------------------
-# CTOS Parameters (4) — Base Structure
+# CTOS Bank-Specific Mapping
 # -----------------------------
-def get_ctos_parameters_table():
-    data = [
-        {
-            "Parameter": "No Legal Suits at All",
-            "Type": "Preference",
-            "Criteria": "",
-            "Status": "",
-            "Detail": ""
-        },
-        {
-            "Parameter": "Legal Suit (Defendant)",
-            "Type": "Strict 2",
-            "Criteria": "",
-            "Status": "",
-            "Detail": ""
-        },
-        {
-            "Parameter": "Trade Bureau",
-            "Type": "Strict 2",
-            "Criteria": "",
-            "Status": "",
-            "Detail": ""
-        },
-        {
-            "Parameter": "Legal Status on Loan",
-            "Type": "Strict 2",
-            "Criteria": "",
-            "Status": "",
-            "Detail": ""
-        }
-    ]
-
-    return pd.DataFrame(data)
+CTOS_MAPPING = {
+    "RHB Bank": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Strict 2"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+    "Maybank": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Not Applicable"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+    "CIMB Bank": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Strict 2"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+    "Standard Chartered": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Preference"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+    "SME Bank": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Strict 2"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+    "Bank Rakyat": [
+        ("No Legal Suits at All", "Preference"),
+        ("Any Legal Suits", "Strict 2"),
+        ("Trade Bureau", "Strict 2"),
+        ("Legal Status on Loan", "Strict 2"),
+    ],
+}
 
 # -----------------------------
-# Display Table
+# Build Table
+# -----------------------------
+def build_ctos_table(bank):
+    rows = []
+    for param, param_type in CTOS_MAPPING[bank]:
+        rows.append({
+            "Parameter": param,
+            "Type": param_type,
+            "Criteria": "",
+            "Status": "",
+            "Detail": ""
+        })
+    return pd.DataFrame(rows)
+
+# -----------------------------
+# Display
 # -----------------------------
 st.subheader(f"🏦 {selected_bank} — CTOS Parameters")
 
-ctos_df = get_ctos_parameters_table()
+df = build_ctos_table(selected_bank)
 
-st.dataframe(
-    ctos_df,
-    use_container_width=True,
-    hide_index=True
-)
+st.dataframe(df, use_container_width=True, hide_index=True)
 
-# -----------------------------
-# Placeholder Note
-# -----------------------------
 st.divider()
 st.info(
-    "ℹ️ Criteria, Status, and Detail are intentionally left blank.\n\n"
-    "Next phase:\n"
-    "- Inject CTOS / Experian extraction results\n"
-    "- Apply bank-specific criteria\n"
-    "- Auto-evaluate Pass / Fail / Conditional\n"
-    "- Match HTML grading logic"
+    "ℹ️ Parameter Type is bank-specific (from CTOS policy).\n\n"
+    "Criteria, Status, and Detail are intentionally left empty.\n\n"
+    "Next step: plug in legal suit extraction & evaluation logic."
 )
