@@ -32,40 +32,40 @@ st.divider()
 # =====================================================
 CTOS_MAPPING = {
     "RHB Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No legal suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance defendant"),
+        ("Trade Bureau", "Strict 2", ">RM5k needs approval"),
+        ("Legal Status on Loan", "Strict 2", "Require settlement"),
     ],
     "Maybank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Not Applicable"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance"),
+        ("Trade Bureau", "Not Applicable", "N/A"),
+        ("Legal Status on Loan", "Strict 2", "Settlement"),
     ],
     "CIMB Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance"),
+        ("Trade Bureau", "Strict 2", "With settlement"),
+        ("Legal Status on Loan", "Strict 2", "Settlement"),
     ],
     "Standard Chartered": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Preference"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance"),
+        ("Trade Bureau", "Preference", "Approval possible"),
+        ("Legal Status on Loan", "Strict 2", "Settlement"),
     ],
     "SME Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance"),
+        ("Trade Bureau", "Strict 2", "Settlement/arrangement"),
+        ("Legal Status on Loan", "Strict 2", "Settlement"),
     ],
     "Bank Rakyat": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "No suits"),
+        ("Legal Suit (Defendant)", "Strict 2", "Zero tolerance"),
+        ("Trade Bureau", "Strict 2", "Settlement/arrangement"),
+        ("Legal Status on Loan", "Strict 2", "Settlement"),
     ],
 }
 
@@ -112,23 +112,25 @@ def evaluate_ctos_parameter(bank, parameter, param_type, ctos):
 # =====================================================
 # TABLE BUILDER
 # =====================================================
-def build_ctos_table(bank, ctos):
+def build_ctos_table(bank, ctos_result):
     rows = []
 
-    for parameter, param_type in CTOS_MAPPING[bank]:
-        status, criteria, detail = evaluate_ctos_parameter(
-            bank, parameter, param_type, ctos
-        )
+    for parameter, param_type, criteria in CTOS_MAPPING[bank]:
+        if param_type == "Not Applicable":
+            status = "N/A"
+        else:
+            status = ""  # to be evaluated later
 
         rows.append({
             "Parameter": parameter,
             "Type": param_type,
             "Criteria": criteria,
             "Status": status,
-            "Detail": detail
+            "Detail": ""
         })
 
     return pd.DataFrame(rows)
+
 
 # =====================================================
 # DISPLAY
