@@ -39,32 +39,72 @@ def read_all_pages(pdf_path):
     return pages
 
 
-def extract_litigation_section(pages):
+def extract_all_litigation_sections(pages):
+    """
+    Extract ALL occurrences of SECTION 3: LITIGATION INFORMATION
+    Each section ends when SECTION 4 starts
+    """
+    sections = []
     collecting = False
-    content = []
+    buffer = []
+    pages_buffer = []
     role = "UNKNOWN"
-    found_pages = []
 
     for page in pages:
         text = page["text"]
 
+        # START of a new Section 3
         if re.search(r"SECTION\s+3:\s+LITIGATION INFORMATION", text, re.I):
+            # save previous section if exists
+            if buffer:
+                sections.append({
+                    "text": "\n".join(buffer),
+                    "pages": pages_buffer,
+                    "role": role
+                })
+
             collecting = True
+            buffer = [text]
+            pages_buffer = [page["page_number"]]
+            role = "UNKNOWN"
 
-        if collecting:
-            content.append(text)
-            found_pages.append(page["page_number"])
-
-            # detect role from section headers
             if "SUBJECT AS DEFENDANT" in text.upper():
                 role = "DEFENDANT"
-            if "SUBJECT AS PLAINTIFF" in text.upper():
+            elif "SUBJECT AS PLAINTIFF" in text.upper():
                 role = "PLAINTIFF"
 
-        if collecting and re.search(r"SECTION\s+4:", text, re.I):
-            break
+            continue
 
-    return "\n".join(content), found_pages, role
+        if collecting:
+            buffer.append(text)
+            pages_buffer.append(page["page_number"])
+
+            if "SUBJECT AS DEFENDANT" in text.upper():
+                role = "DEFENDANT"
+            elif "SUBJECT AS PLAINTIFF" in text.upper():
+                role = "PLAINTIFF"
+
+            # END of this Section 3
+            if re.search(r"SECTION\s+4:", text, re.I):
+                sections.append({
+                    "text": "\n".join(buffer),
+                    "pages": pages_buffer,
+                    "role": role
+                })
+                collecting = False
+                buffer = []
+                pages_buffer = []
+                role = "UNKNOWN"
+
+    # Catch section 3 at end of document
+    if buffer:
+        sections.append({
+            "text": "\n".join(buffer),
+            "pages": pages_buffer,
+            "role": role
+        })
+
+    return sections
 
 
 def parse_legal_suits(litigation_text, role):
@@ -121,13 +161,22 @@ if uploaded_file:
     with st.spinner("Processing PDF, please wait..."):
         pages = read_all_pages(pdf_path)
         company_name = extract_company_name(pages)
-        litigation_text, pages_found, role = extract_litigation_section(pages)
+        sections = extract_all_litigation_sections(pages)
+
 
         if not litigation_text:
             st.error("❌ Litigation section not found.")
             st.stop()
 
-        cases = parse_legal_suits(litigation_text, role)
+        all_cases = []
+        
+        for idx, section in enumerate(sections, 1):
+            cases = parse_legal_suits(section["text"], section["role"])
+            for case in cases:
+                case["section_index"] = idx
+                case["section_pages"] = section["pages"]
+            all_cases.extend(cases)
+
 
     # 🔥 BIG TITLE
     st.markdown(f"# 🏢 {company_name}")
