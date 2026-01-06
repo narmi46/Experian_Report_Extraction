@@ -6,16 +6,24 @@ import tempfile
 
 
 # --------------------------------
-# Extraction Helpers
+# Helpers
 # --------------------------------
 
+def read_all_pages(pdf_path):
+    pages = []
+    with pdfplumber.open(pdf_path) as pdf:
+        for i, page in enumerate(pdf.pages):
+            text = page.extract_text()
+            if text:
+                pages.append({
+                    "page_number": i + 1,
+                    "text": text
+                })
+    return pages
+
+
 def extract_company_name(pages):
-    """
-    Extract company name from:
-    - 'Name Of Subject'
-    - 'Company Name'
-    """
-    for page in pages[:3]:  # only first few pages needed
+    for page in pages[:3]:
         text = page["text"]
 
         m1 = re.search(r"Name Of Subject\s+([A-Z\s\.&]+)", text)
@@ -29,21 +37,11 @@ def extract_company_name(pages):
     return "UNKNOWN COMPANY"
 
 
-def read_all_pages(pdf_path):
-    pages = []
-    with pdfplumber.open(pdf_path) as pdf:
-        for i, page in enumerate(pdf.pages):
-            text = page.extract_text()
-            if text:
-                pages.append({"page_number": i + 1, "text": text})
-    return pages
-
+# --------------------------------
+# 🔥 MULTI SECTION 3 EXTRACTION
+# --------------------------------
 
 def extract_all_litigation_sections(pages):
-    """
-    Extract ALL occurrences of SECTION 3: LITIGATION INFORMATION
-    Each section ends when SECTION 4 starts
-    """
     sections = []
     collecting = False
     buffer = []
@@ -53,9 +51,8 @@ def extract_all_litigation_sections(pages):
     for page in pages:
         text = page["text"]
 
-        # START of a new Section 3
+        # START new Section 3
         if re.search(r"SECTION\s+3:\s+LITIGATION INFORMATION", text, re.I):
-            # save previous section if exists
             if buffer:
                 sections.append({
                     "text": "\n".join(buffer),
@@ -84,7 +81,7 @@ def extract_all_litigation_sections(pages):
             elif "SUBJECT AS PLAINTIFF" in text.upper():
                 role = "PLAINTIFF"
 
-            # END of this Section 3
+            # END this Section 3
             if re.search(r"SECTION\s+4:", text, re.I):
                 sections.append({
                     "text": "\n".join(buffer),
@@ -96,7 +93,7 @@ def extract_all_litigation_sections(pages):
                 pages_buffer = []
                 role = "UNKNOWN"
 
-    # Catch section 3 at end of document
+    # Catch trailing section
     if buffer:
         sections.append({
             "text": "\n".join(buffer),
@@ -107,10 +104,17 @@ def extract_all_litigation_sections(pages):
     return sections
 
 
+# --------------------------------
+# Case Parsing
+# --------------------------------
+
 def parse_legal_suits(litigation_text, role):
     cases = []
 
-    case_numbers = re.finditer(r"(BK-[A-Z0-9\-\/]+-\d{4})", litigation_text)
+    case_numbers = re.finditer(
+        r"(BK-[A-Z0-9\-\/]+-\d{4})",
+        litigation_text
+    )
 
     for match in case_numbers:
         case = {
@@ -129,13 +133,10 @@ def parse_legal_suits(litigation_text, role):
 
         if court:
             case["court"] = court.group(1)
-
         if plaintiff:
             case["plaintiff"] = " ".join(plaintiff.group(1).split())
-
         if status:
             case["status"] = status.group(1)
-
         if hearing:
             case["hearing_date"] = hearing.group(1)
 
@@ -149,6 +150,7 @@ def parse_legal_suits(litigation_text, role):
 # --------------------------------
 
 st.set_page_config(page_title="Litigation Extractor", layout="wide")
+st.title("⚖️ Litigation Information Extractor")
 
 uploaded_file = st.file_uploader("📄 Upload Experian / CTOS PDF", type=["pdf"])
 
@@ -157,47 +159,47 @@ if uploaded_file:
         tmp.write(uploaded_file.read())
         pdf_path = tmp.name
 
-    # ✅ Option 2: Simple Spinner (Minimal)
+    # 🔄 Loading Indicator
     with st.spinner("Processing PDF, please wait..."):
         pages = read_all_pages(pdf_path)
         company_name = extract_company_name(pages)
         sections = extract_all_litigation_sections(pages)
 
-
-        if not litigation_text:
-            st.error("❌ Litigation section not found.")
-            st.stop()
-
-        all_cases = []
-        
-        for idx, section in enumerate(sections, 1):
-            cases = parse_legal_suits(section["text"], section["role"])
-            for case in cases:
-                case["section_index"] = idx
-                case["section_pages"] = section["pages"]
-            all_cases.extend(cases)
-
-
-    # 🔥 BIG TITLE
+    # 🏢 Company Title
     st.markdown(f"# 🏢 {company_name}")
     st.markdown("## ⚖️ Litigation Information")
 
-    st.success(f"Found on pages: {pages_found}")
-    st.info(f"Company Role in Suits: **{role}**")
+    if not sections:
+        st.warning("No Litigation Sections Found.")
+        st.stop()
 
-    st.subheader(f"📌 Total Cases Found: {len(cases)}")
+    all_cases = []
 
-    for i, case in enumerate(cases, 1):
-        emoji = "🔴" if case["company_role"] == "DEFENDANT" else "🟢"
-        with st.expander(f"{emoji} Case {i}: {case['case_no']}"):
-            st.json(case)
+    for idx, section in enumerate(sections, 1):
+        cases = parse_legal_suits(section["text"], section["role"])
+
+        for case in cases:
+            case["section_no"] = idx
+            case["section_pages"] = section["pages"]
+
+        all_cases.extend(cases)
+
+        st.markdown(f"### 📄 Section {idx} (Pages {section['pages']})")
+        st.info(f"Company Role: **{section['role']}**")
+
+        if not cases:
+            st.warning("No cases found in this section.")
+        else:
+            for i, case in enumerate(cases, 1):
+                emoji = "🔴" if case["company_role"] == "DEFENDANT" else "🟢"
+                with st.expander(f"{emoji} Case {i}: {case['case_no']}"):
+                    st.json(case)
+
+    st.subheader(f"📌 Total Legal Cases Found: {len(all_cases)}")
 
     st.download_button(
         "💾 Download JSON",
-        json.dumps(cases, indent=2),
+        json.dumps(all_cases, indent=2),
         file_name="legal_suits_output.json",
         mime="application/json"
     )
-
-    with st.expander("🧾 Raw Litigation Text"):
-        st.text(litigation_text)
