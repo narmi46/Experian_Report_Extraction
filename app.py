@@ -5,21 +5,21 @@ import pandas as pd
 # Page Config
 # -----------------------------
 st.set_page_config(
-    page_title="CTOS Legal Assessment",
+    page_title="CTOS Parameters",
     layout="wide"
 )
 
-st.title("📊 CTOS Legal Suit Assessment")
-st.caption("SME Credit Policy View (Bank-by-Bank)")
+st.title("📊 CTOS Parameters (4)")
+st.caption("Foundation Table — Criteria & Result To Be Applied Later")
 
 # -----------------------------
-# Bank Selection
+# Bank Selector (1 at a time)
 # -----------------------------
 banks = [
-    "RHB Bank (SME)",
-    "Maybank (SME)",
-    "CIMB Bank (SME)",
-    "Standard Chartered (SME)",
+    "RHB Bank",
+    "Maybank",
+    "CIMB Bank",
+    "Standard Chartered",
     "SME Bank",
     "Bank Rakyat"
 ]
@@ -32,67 +32,48 @@ selected_bank = st.selectbox(
 st.divider()
 
 # -----------------------------
-# Base CTOS Result Table
+# CTOS Parameters (4) — Base Structure
 # -----------------------------
-def get_ctos_table(bank_name):
-    """
-    Base structure only.
-    Logic & evaluation will be added later.
-    """
+def get_ctos_parameters_table():
     data = [
         {
-            "Parameter": "Legal Suits",
-            "Type": "CTOS",
-            "Criteria": "No legal suits at all",
-            "Status": "Preferred",
-            "Detail": "Most preferred scenario"
+            "Parameter": "No Legal Suits at All",
+            "Type": "Preference",
+            "Criteria": "",
+            "Status": "",
+            "Detail": ""
         },
         {
-            "Parameter": "Legal Suits",
-            "Type": "CTOS",
-            "Criteria": "Applicant as Plaintiff",
-            "Status": "Conditional",
-            "Detail": "Acceptable if no major monetary loss and status is known"
-        },
-        {
-            "Parameter": "Legal Suits",
-            "Type": "CTOS",
-            "Criteria": "Applicant as Defendant (Settled)",
-            "Status": "Strict",
-            "Detail": "Requires full settlement with valid settlement letter"
-        },
-        {
-            "Parameter": "Legal Suits",
-            "Type": "CTOS",
-            "Criteria": "Applicant as Defendant (Ongoing)",
-            "Status": "Reject",
-            "Detail": "Ongoing cases without settlement are not acceptable"
+            "Parameter": "Legal Suit (Defendant)",
+            "Type": "Strict 2",
+            "Criteria": "",
+            "Status": "",
+            "Detail": ""
         },
         {
             "Parameter": "Trade Bureau",
-            "Type": "CTOS",
-            "Criteria": "Outstanding > RM5,000",
-            "Status": "Mitigation Required",
-            "Detail": "Settlement & higher-level approval required"
+            "Type": "Strict 2",
+            "Criteria": "",
+            "Status": "",
+            "Detail": ""
         },
         {
-            "Parameter": "Trade Bureau",
-            "Type": "CTOS",
-            "Criteria": "Outstanding ≤ RM5,000",
-            "Status": "Conditional",
-            "Detail": "Mitigation may be sufficient"
+            "Parameter": "Legal Status on Loan",
+            "Type": "Strict 2",
+            "Criteria": "",
+            "Status": "",
+            "Detail": ""
         }
     ]
 
     return pd.DataFrame(data)
 
-
 # -----------------------------
-# Display Section
+# Display Table
 # -----------------------------
-st.subheader(f"🏦 Bank Policy: {selected_bank}")
+st.subheader(f"🏦 {selected_bank} — CTOS Parameters")
 
-ctos_df = get_ctos_table(selected_bank)
+ctos_df = get_ctos_parameters_table()
 
 st.dataframe(
     ctos_df,
@@ -101,14 +82,14 @@ st.dataframe(
 )
 
 # -----------------------------
-# Placeholder for Future Logic
+# Placeholder Note
 # -----------------------------
 st.divider()
 st.info(
-    "ℹ️ This is the base CTOS policy table.\n\n"
+    "ℹ️ Criteria, Status, and Detail are intentionally left blank.\n\n"
     "Next phase:\n"
-    "- Map Experian / CTOS extracted results\n"
-    "- Auto-evaluate Status per bank\n"
-    "- Highlight Accept / Conditional / Reject\n"
-    "- Add mitigation checklist"
+    "- Inject CTOS / Experian extraction results\n"
+    "- Apply bank-specific criteria\n"
+    "- Auto-evaluate Pass / Fail / Conditional\n"
+    "- Match HTML grading logic"
 )
