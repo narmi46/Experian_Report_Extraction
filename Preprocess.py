@@ -113,6 +113,7 @@ if uploaded_file:
         tmp.write(uploaded_file.read())
         pdf_path = tmp.name
 
+    with st.spinner("Processing PDF, please wait..."):
     pages = read_all_pages(pdf_path)
     company_name = extract_company_name(pages)
 
