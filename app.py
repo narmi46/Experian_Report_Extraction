@@ -9,72 +9,58 @@ st.caption("Bank-Specific Classification (from CTOS Policy)")
 # -----------------------------
 # Bank Selection
 # -----------------------------
-banks = [
-    "RHB Bank",
-    "Maybank",
-    "CIMB Bank",
-    "Standard Chartered",
-    "SME Bank",
-    "Bank Rakyat"
-]
-
-selected_bank = st.selectbox("Select Bank", banks)
-st.divider()
-
-# -----------------------------
-# CTOS Bank-Specific Mapping
-# -----------------------------
 CTOS_MAPPING = {
     "RHB Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Strict 2", "", "", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
     "Maybank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Not Applicable"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Not Applicable", "N/A", "N/A", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
     "CIMB Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Strict 2", "", "", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
     "Standard Chartered": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Preference"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Preference", "", "", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
     "SME Bank": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Strict 2", "", "", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
     "Bank Rakyat": [
-        ("No Legal Suits at All", "Preference"),
-        ("Any Legal Suits", "Strict 2"),
-        ("Trade Bureau", "Strict 2"),
-        ("Legal Status on Loan", "Strict 2"),
+        ("No Legal Suits at All", "Preference", "", "", ""),
+        ("Any Legal Suits", "Strict 2", "", "", ""),
+        ("Trade Bureau", "Strict 2", "", "", ""),
+        ("Legal Status on Loan", "Strict 2", "", "", ""),
     ],
 }
+
 
 # -----------------------------
 # Build Table
 # -----------------------------
 def build_ctos_table(bank):
     rows = []
-    for param, param_type in CTOS_MAPPING[bank]:
+    for param, param_type, criteria, status, detail in CTOS_MAPPING[bank]:
         rows.append({
             "Parameter": param,
             "Type": param_type,
-            "Criteria": "",
-            "Status": "",
-            "Detail": ""
+            "Criteria": criteria,
+            "Status": status,
+            "Detail": detail
         })
     return pd.DataFrame(rows)
 
