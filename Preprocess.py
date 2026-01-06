@@ -55,9 +55,10 @@ def extract_litigation_section(pages):
             content.append(text)
             found_pages.append(page["page_number"])
 
+            # detect role from section headers
             if "SUBJECT AS DEFENDANT" in text.upper():
                 role = "DEFENDANT"
-            elif "SUBJECT AS PLAINTIFF" in text.upper():
+            if "SUBJECT AS PLAINTIFF" in text.upper():
                 role = "PLAINTIFF"
 
         if collecting and re.search(r"SECTION\s+4:", text, re.I):
@@ -88,10 +89,13 @@ def parse_legal_suits(litigation_text, role):
 
         if court:
             case["court"] = court.group(1)
+
         if plaintiff:
             case["plaintiff"] = " ".join(plaintiff.group(1).split())
+
         if status:
             case["status"] = status.group(1)
+
         if hearing:
             case["hearing_date"] = hearing.group(1)
 
@@ -104,7 +108,7 @@ def parse_legal_suits(litigation_text, role):
 # Streamlit UI
 # --------------------------------
 
-st.set_page_config(page_title="Experian Report Extractor", layout="wide")
+st.set_page_config(page_title="Litigation Extractor", layout="wide")
 
 uploaded_file = st.file_uploader("📄 Upload Experian / CTOS PDF", type=["pdf"])
 
@@ -113,24 +117,24 @@ if uploaded_file:
         tmp.write(uploaded_file.read())
         pdf_path = tmp.name
 
+    # ✅ Option 2: Simple Spinner (Minimal)
     with st.spinner("Processing PDF, please wait..."):
-    pages = read_all_pages(pdf_path)
-    company_name = extract_company_name(pages)
+        pages = read_all_pages(pdf_path)
+        company_name = extract_company_name(pages)
+        litigation_text, pages_found, role = extract_litigation_section(pages)
+
+        if not litigation_text:
+            st.error("❌ Litigation section not found.")
+            st.stop()
+
+        cases = parse_legal_suits(litigation_text, role)
 
     # 🔥 BIG TITLE
     st.markdown(f"# 🏢 {company_name}")
     st.markdown("## ⚖️ Litigation Information")
 
-    litigation_text, pages_found, role = extract_litigation_section(pages)
-
-    if not litigation_text:
-        st.error("❌ Litigation section not found.")
-        st.stop()
-
     st.success(f"Found on pages: {pages_found}")
     st.info(f"Company Role in Suits: **{role}**")
-
-    cases = parse_legal_suits(litigation_text, role)
 
     st.subheader(f"📌 Total Cases Found: {len(cases)}")
 
